@@ -13,7 +13,7 @@ import sys
 import json
 import os
 from datetime import datetime
-from pymongo import MongoClient, WriteConcern, read_preferences
+from pymongo import MongoClient, read_preferences
 from pymongo.errors import BulkWriteError
 from dotenv import load_dotenv
 
@@ -48,6 +48,7 @@ except Exception as e:
 
 # Connect and insert
 def try_insert(documents):
+    """Insert a list of documents into the target MongoDB collection."""
     client = MongoClient(uri, retryWrites=True, read_preference=read_preferences.PrimaryPreferred())
     collection = client[db_name].get_collection(collection_name)
     return collection.insert_many(documents, ordered=False)
@@ -55,7 +56,7 @@ def try_insert(documents):
 try:
     print(f"⏳ Bulk insert starting for REGION={default_region} at {datetime.now()}")
     try_insert(docs)
-    print(f"✅ Inserted {len(docs)} documents successfully at {datetime.now()}")
+    print(f"✅ Inserted {len(docs)} documents at {datetime.now()}")
 except BulkWriteError as bwe:
     print(f"❌ Bulk write error on REGION={default_region} at {datetime.now()}")
     # Modify location based on region
@@ -71,7 +72,7 @@ except BulkWriteError as bwe:
             doc["location"] = fallback_location
         try:
             try_insert(docs)
-            print(f"✅ Fallback insert successful with location={fallback_location} at {datetime.now()}")
+            print(f"✅ Fallback insert with location={fallback_location} at {datetime.now()}")
         except Exception as e2:
             print(f"❌ Fallback insert failed: {e2} at {datetime.now()}")
             sys.exit(1)
